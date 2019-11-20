@@ -2,14 +2,32 @@
 Common [[https://pre-commit.com/][pre-commit]] hooks.
 
 ** Setup
+Install pre-commit:
 #+begin_src shell
-# Install pre-commit:
-brew install pre-commit
 nix-env -i pre-commit
-# Create pre-commit configuration
-# ...
-# Install hooks
+#+end_src
+Create pre-commit configuration in ~.pre-commit-config.yaml~:
+#+begin_src yaml
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.4.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+-   repo: https://github.com/peel/pre-commit-hooks
+    rev: HEAD
+    hooks:
+    -   id: ghissue-message
+        args: [owner, repo, {GITHUB_TOKEN}]
+        verbose: true
+#+end_src
+Install pre-commit hooks:
+#+begin_src shell
 pre-commit install
-# Test pre-commit
-pre-commit run --all-files
+#+end_src
+** Run directly
+#+begin_src bash
+cargo run -- owner repo {GITHUB_TOKEN} .git/COMMIT_EDITMSG
 #+end_src
