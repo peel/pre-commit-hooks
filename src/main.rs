@@ -2,14 +2,42 @@ use github_rs::client::{Executor, Github};
 use github_rs::{HeaderMap, StatusCode};
 use serde_json::Value;
 use std::env;
+use clap::{App, Arg};
 
 fn main() {
+    let matches = App::new("GitHub Issue Rule")
+        .version("1.0")
+        .about("Align commit name with GitHub Issue")
+        .arg(
+            Arg::with_name("owner")
+                .required(true)
+                .help("Repository owner"),
+        )
+        .arg(
+            Arg::with_name("repo")
+                .required(true)
+                .help("Repository name"),
+        )
+        .arg(
+            Arg::with_name("token")
+                .required(false)
+                .help("GitHub user token"),
+        )
+        .get_matches();
+    
     let gh_token_key = "GITHUB_PERSONAL_ACCESS_TOKEN";
-    let err_msg = format!("Github personal access token is needed in {}.", gh_token_key);
-    let gh_token = env::var(gh_token_key).expect(&err_msg);
-    let client = Github::new(gh_token).expect("failed to create client");
-    let owner = "snowplow";
-    let repo_name = "snowplow";
+    let env_t = env::var(gh_token_key).unwrap();
+
+    let t = matches.value_of("token").or(Some(&env_t)).expect("No token set");
+    let client = Github::new(t).expect("failed to create client");
+    let o = matches.value_of("owner").expect("No owner set");
+    let r = matches.value_of("repo").expect("No repo set");
+    
+    run(&client, o, r);
+}
+
+
+fn run(client: &Github, owner: &str, repo_name: &str) -> () {
     let issues = get_issues(&client, owner, repo_name).expect("failed to get issues");
 
     let issues_arr = issues
