@@ -1,0 +1,15 @@
+* pre-commit-hooks
+Common [[https://pre-commit.com/][pre-commit]] hooks.
+
+** Setup
+#+begin_src shell
+# Install pre-commit:
+brew install pre-commit
+nix-env -i pre-commit
+# Create pre-commit configuration
+# ...
+# Install hooks
+pre-commit install
+# Test pre-commit
+pre-commit run --all-files
+#+end_src
