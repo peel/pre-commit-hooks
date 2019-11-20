@@ -19,6 +19,7 @@ fn main() {
     issues_arr
         .into_iter()
         .map(|x| x.get("title"))
+        .filter(|x| x.unwrap() == "Scala Stream Collector: bump to 0.17.0")
         .for_each(|x| println!("{}", x.unwrap()));
 }
 
@@ -31,17 +32,14 @@ fn get_issues(client: &Github, owner: &str, repo_name: &str) -> Option<Value> {
         //set custom endpoint here
         .custom_endpoint(&issues_endpoint)
         .execute::<Value>();
-    print_info_and_get_json(response)
+    get_json(response)
 }
 
-//printing headers and status or error and returning json on success
-fn print_info_and_get_json(
+fn get_json(
     response: Result<(HeaderMap, StatusCode, Option<Value>), github_rs::errors::Error>,
 ) -> Option<Value> {
     match response {
-        Ok((headers, status, json)) => {
-            println!("{:#?}", headers);
-            println!("{}", status);
+        Ok((_, _, json)) => {
             json
         }
         Err(e) => {
