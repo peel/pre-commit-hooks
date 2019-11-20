@@ -3,6 +3,7 @@ use github_rs::{HeaderMap, StatusCode};
 use serde_json::Value;
 use std::env;
 use clap::{App, Arg};
+use std::process::{Command, exit};
 
 fn main() {
     let matches = App::new("GitHub Issue Rule")
@@ -40,15 +41,26 @@ fn main() {
 fn run(client: &Github, owner: &str, repo_name: &str) -> () {
     let issues = get_issues(&client, owner, repo_name).expect("failed to get issues");
 
+
+    let commit_msg = String::from_utf8(
+        Command::new("cat")
+            .arg(".git/COMMIT_EDITMSG")
+            .arg("| head -n 1")
+            .output()
+            .expect("Failed to execute git!")
+            .stdout
+    ).unwrap();
+
     let issues_arr = issues
         .as_array()
         .expect("failed to cast issues to json array");
     
-    issues_arr
+    let is_issue = issues_arr
         .into_iter()
         .map(|x| x.get("title"))
-        .filter(|x| x.unwrap() == "Scala Stream Collector: bump to 0.17.0")
-        .for_each(|x| println!("{}", x.unwrap()));
+        .any(|x| x.unwrap() == &commit_msg);
+
+    if is_issue {exit(0)} else {exit(1)}
 }
 
 fn get_issues(client: &Github, owner: &str, repo_name: &str) -> Option<Value> {
