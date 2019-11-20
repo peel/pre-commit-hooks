@@ -1,12 +1,19 @@
 use github_rs::client::{Executor, Github};
 use github_rs::{HeaderMap, StatusCode};
 use serde_json::Value;
+use clap::{Arg, App, SubCommand};
 
 fn main() {
-    let client = Github::new("").expect("failed to create client");
+    let user_token = "";
     let owner = "snowplow";
     let repo_name = "snowplow";
 
+    run(user_token, owner, repo_name);
+}
+
+
+fn run(user_token: &str, owner: &str, repo_name: &str) -> () {
+    let client = Github::new(user_token).expect("failed to create client");
     let issues = get_issues(&client, owner, repo_name).expect("failed to get issues");
 
     let issues_arr = issues
@@ -17,6 +24,8 @@ fn main() {
         .into_iter()
         .map(|x| x.get("title"))
         .for_each(|x| println!("{}", x.unwrap()));
+
+    
 }
 
 fn get_issues(client: &Github, owner: &str, repo_name: &str) -> Option<Value> {
