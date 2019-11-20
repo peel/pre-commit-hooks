@@ -1,19 +1,15 @@
 use github_rs::client::{Executor, Github};
 use github_rs::{HeaderMap, StatusCode};
 use serde_json::Value;
-use clap::{Arg, App, SubCommand};
+use std::env;
 
 fn main() {
-    let user_token = "";
+    let gh_token_key = "GITHUB_PERSONAL_ACCESS_TOKEN";
+    let err_msg = format!("Github personal access token is needed in {}.", gh_token_key);
+    let gh_token = env::var(gh_token_key).expect(&err_msg);
+    let client = Github::new(gh_token).expect("failed to create client");
     let owner = "snowplow";
     let repo_name = "snowplow";
-
-    run(user_token, owner, repo_name);
-}
-
-
-fn run(user_token: &str, owner: &str, repo_name: &str) -> () {
-    let client = Github::new(user_token).expect("failed to create client");
     let issues = get_issues(&client, owner, repo_name).expect("failed to get issues");
 
     let issues_arr = issues
@@ -24,8 +20,6 @@ fn run(user_token: &str, owner: &str, repo_name: &str) -> () {
         .into_iter()
         .map(|x| x.get("title"))
         .for_each(|x| println!("{}", x.unwrap()));
-
-    
 }
 
 fn get_issues(client: &Github, owner: &str, repo_name: &str) -> Option<Value> {
