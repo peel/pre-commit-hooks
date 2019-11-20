@@ -3,3 +3,4 @@
   description: 'Enforce match between commit message and github issue. If the issue does not exist it will be created.'
   entry: ghissue-message
   language: rust
+  pass_filenames: false
