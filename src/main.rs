@@ -1,25 +1,22 @@
 use github_rs::client::{Executor, Github};
 use github_rs::{HeaderMap, StatusCode};
-use hyper::header::{HeaderValue, ACCEPT};
-use serde_json::{Value,from_str};
+use serde_json::Value;
 
 fn main() {
-    //create new client
     let client = Github::new("").expect("failed to create client");
-    //github username
-    let owner = "peel";
-    //repository name
-    let repo_name = "dotfiles";
-    //
+    let owner = "snowplow";
+    let repo_name = "snowplow";
+
     let issues = get_issues(&client, owner, repo_name).expect("failed to get issues");
-    //get all issues as json array
+
     let issues_arr = issues
         .as_array()
         .expect("failed to cast issues to json array");
     
     issues_arr
-        .map(|x| x["title"])
-        .for_each(|x| println!("{}", x));
+        .into_iter()
+        .map(|x| x.get("title"))
+        .for_each(|x| println!("{}", x.unwrap()));
 }
 
 fn get_issues(client: &Github, owner: &str, repo_name: &str) -> Option<Value> {
