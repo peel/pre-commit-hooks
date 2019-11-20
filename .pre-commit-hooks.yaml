@@ -1,5 +1,5 @@
 - id: ghissue-message
   name: ghissue-message
   description: 'Enforce match between commit message and github issue. If the issue does not exist it will be created.'
-  entry: ghissue-message/test
+  entry: ghissue-message
   language: rust
