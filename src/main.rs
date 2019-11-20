@@ -10,19 +10,27 @@ fn main() {
         .version("1.0")
         .about("Align commit name with GitHub Issue")
         .arg(
+            Arg::with_name("www")
+                .required(true)
+                .help("Repository owner")
+                .index(1)
+        )
+        .arg(
             Arg::with_name("owner")
                 .required(true)
-                .help("Repository owner"),
+                .help("Repository owner")
+                .index(2)
         )
         .arg(
             Arg::with_name("repo")
                 .required(true)
-                .help("Repository name"),
+                .help("Repository name")
+                .index(3)
         )
         .arg(
             Arg::with_name("token")
                 .required(false)
-                .help("GitHub user token"),
+                .help("GitHub user token")
         )
         .get_matches();
     
