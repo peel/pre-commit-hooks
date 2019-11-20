@@ -4,6 +4,10 @@ use serde_json::Value;
 use std::env;
 use clap::{App, Arg};
 use std::process::{Command, exit};
+use std::io::BufReader;
+use std::io::BufRead;
+use std::io;
+use std::fs;
 
 fn main() {
     let matches = App::new("GitHub Issue Rule")
@@ -35,25 +39,21 @@ fn main() {
     let r = matches.value_of("repo").expect("No repo set");
     let m = matches.value_of("message-file").expect("No message file set");
     
-    println!("file: {}, owner: {}, repo: {} token: {}", m, o, r, t);
+    // println!("file: {}, owner: {}, repo: {} token: {}", m, o, r, t);
     let client = Github::new(r).expect("failed to create client");
 
     run(&client, t, m, o, r)
 }
 
+fn file_to_vec(filename: &str) -> io::Result<Vec<String>> {
+    let file_in = fs::File::open(filename)?;
+    let file_reader = BufReader::new(file_in);
+    Ok(file_reader.lines().filter_map(io::Result::ok).collect())
+}
 
 fn run(client: &Github, message_file: &str, owner: &str, repo_name: &str, token: &str) -> () {
     let issues = get_issues(&client, owner, repo_name).expect("failed to get issues");
-
-    let commit_msg = String::from_utf8(
-        Command::new("cat")
-            .arg(&message_file)
-            .arg("| head -n 1")
-            .output()
-            .expect("Failed to execute git!")
-            .stdout
-    ).unwrap();
-
+    let commit_msg = file_to_vec(message_file).unwrap().pop().unwrap();
     let issues_arr = issues
         .as_array()
         .expect("failed to cast issues to json array");
@@ -61,7 +61,10 @@ fn run(client: &Github, message_file: &str, owner: &str, repo_name: &str, token:
     let is_issue = issues_arr
         .into_iter()
         .map(|x| x.get("title"))
-        .any(|x| x.unwrap() == &commit_msg);
+        .any(|x| {
+            // println!("x: {}, msg: {}", x.unwrap(), commit_msg);
+            x.unwrap() == &commit_msg.trim()
+        });
 
     if is_issue {exit(0)} else {exit(1)}
 }
