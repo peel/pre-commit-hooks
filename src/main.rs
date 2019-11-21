@@ -3,7 +3,7 @@ use github_rs::{HeaderMap, StatusCode};
 use serde_json::Value;
 use std::env;
 use clap::{App, Arg};
-use std::process::{Command, exit};
+use std::process::exit;
 use std::io::BufReader;
 use std::io::BufRead;
 use std::io;
@@ -32,17 +32,18 @@ fn main() {
         .get_matches();
     
     let gh_token_key = "GITHUB_PERSONAL_ACCESS_TOKEN";
-    let env_t = env::var(gh_token_key).unwrap();
+    let env_t = env::var(gh_token_key);
 
-    let t = matches.value_of("token").or(Some(&env_t)).expect("No token set");
+    let m = matches.value_of("message-file").expect("No message file set");
     let o = matches.value_of("owner").expect("No owner set");
     let r = matches.value_of("repo").expect("No repo set");
-    let m = matches.value_of("message-file").expect("No message file set");
+    let tt = (match env_t {
+        Ok(t) => Some(t),
+        Err(_) => matches.value_of("token").map(ToString::to_string),
+    }).expect("No token set");
     
-    // println!("file: {}, owner: {}, repo: {} token: {}", m, o, r, t);
-    let client = Github::new(r).expect("failed to create client");
-
-    run(&client, t, m, o, r)
+    let client = Github::new(tt).expect("failed to create client");
+    run(&client, m, o, r)
 }
 
 fn file_to_vec(filename: &str) -> io::Result<Vec<String>> {
@@ -51,7 +52,7 @@ fn file_to_vec(filename: &str) -> io::Result<Vec<String>> {
     Ok(file_reader.lines().filter_map(io::Result::ok).collect())
 }
 
-fn run(client: &Github, message_file: &str, owner: &str, repo_name: &str, token: &str) -> () {
+fn run(client: &Github, message_file: &str, owner: &str, repo_name: &str) -> () {
     let issues = get_issues(&client, owner, repo_name).expect("failed to get issues");
     let commit_msg = file_to_vec(message_file).unwrap().pop().unwrap();
     let issues_arr = issues
@@ -61,10 +62,7 @@ fn run(client: &Github, message_file: &str, owner: &str, repo_name: &str, token:
     let is_issue = issues_arr
         .into_iter()
         .map(|x| x.get("title"))
-        .any(|x| {
-            // println!("x: {}, msg: {}", x.unwrap(), commit_msg);
-            x.unwrap() == &commit_msg.trim()
-        });
+        .any(|x| x.unwrap() == &commit_msg.trim());
 
     if is_issue {exit(0)} else {exit(1)}
 }
